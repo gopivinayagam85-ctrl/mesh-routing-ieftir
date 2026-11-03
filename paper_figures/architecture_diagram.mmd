@@ -1,0 +1,108 @@
+```mermaid
+flowchart TD
+%% =========================================================================
+%% ARCHITECTURE OF THE IEFT-IR ROUTING SIMULATION FRAMEWORK
+%% Audited and Verified Against Codebase Implementation
+%% =========================================================================
+
+    subgraph CONFIG ["1. Simulation Configuration & Scenario Setup (backend/main.py, backend/engine.py)"]
+        direction TB
+        C1["SimRequest / Config Dataclass<br/>• Network: nodes N=28 [default], gateway=0, rounds R=80, seed=7<br/>• Target connectivity parameter: k=2 (target, heuristic augmentation; no formal guarantee)<br/>• Energy model: initial_energy=100.0 J, tx_cost=0.65 J, rx_cost=0.18 J, threshold=25.0%<br/>• Optional weighted route: use_weighted_route=False [default], weights w_e=1.0, w_d=1.0, w_r=1.0<br/>• Fault model: failure_round=25, failure_count=1, failure_mode='articulation' [default]<br/>• Optional k-safety check: rigorous_k=False [default, max alternatives: 5]"]
+    end
+
+    subgraph TOPOLOGY ["2. Mesh Network Topology & State Management (backend/engine.py, backend/simulation/topology.py)"]
+        direction TB
+        T1["Spatial Topology Generation: build_network(n, seed, k)<br/>• Uniform random unit-square coordinates pos (x, y)<br/>• Geometric links (radius based on n) + shortest inter-component stitching<br/>• Best-effort candidate edge augmentation toward requested edge-connectivity k"]
+        T2["Active Graph State & Cache Invalidation<br/>• active = G.copy() (NetworkX Graph)<br/>• Node battery dictionary: energies[n] & cumulative drain: depletion[n]<br/>• Measured edge connectivity: nx.edge_connectivity(G)<br/>• Cache: _cached_edge_connectivity (cleared on topology changes via invalidate_connectivity_cache)"]
+        T1 --> T2
+    end
+
+    subgraph COST_EVAL ["3. Energy State & Routing-Cost Evaluation (backend/engine.py)"]
+        direction TB
+        W1["Edge Cost Evaluation: route_weight(G, u, v, mode, energies, depletion, cfg)<br/>• If mode == 'shortest': C(u,v) = 1.0 + d<br/>• If use_weighted_route == False [Default Formulation]:<br/>  C(u,v) = tx_cost · (1 + d²) + 2.4 / max(0.02, E_v / E_init) + 3.0 · (D_v / E_init)<br/>• If use_weighted_route == True [Optional Multi-Objective Formulation]:<br/>  C(u,v) = tx_cost · (1 + d²) + w_e · (2.4 / e_v) + w_d · (3.0 · drain) + w_r · (1.0 - κ / k)<br/>  (where κ = _get_cached_connectivity(G) of active topology)"]
+    end
+
+    subgraph ALGORITHMS ["4. Routing Algorithm Execution (backend/engine.py, backend/simulation/routing.py)"]
+        direction TB
+        A1["Routing Algorithm Selection<br/>(engine_algo parameter)"]
+
+        subgraph BASELINES ["Baseline Routing Schemes"]
+            B1["Shortest-Path (SP)<br/>• Mode: 'shortest'<br/>• Cost = 1.0 + d<br/>• Global recomputation per round"]
+            B2["Global Energy-Aware (EA)<br/>• Mode: 'energy'<br/>• Energy & depletion cost<br/>• Global recomputation per round"]
+        end
+
+        subgraph IEFTIR ["Proposed IEFT-IR Scheme (Incremental Energy-Aware Fault-Tolerant)"]
+            I1["Multi-Objective Dijkstra<br/>compute_path(active, src, gateway, 'energy')"]
+            I2["Optional Rigorous k-Edge Safety Check<br/>(Active only when rigorous_k = True and k ≥ 2)<br/>• Bridge detection via _path_uses_bridge(active, path)<br/>• Up to 5 alternative paths via edge penalties; fallback if infeasible"]
+            I3["Route-State Cache Table<br/>paths[src] = [src, ..., gateway]<br/>Preserved in memory across rounds (steady-state: 0 recomputations)"]
+            I1 --> I2 --> I3
+        end
+
+        A1 -->|algo = 'shortest'| B1
+        A1 -->|algo = 'energy'| B2
+        A1 -->|algo = 'incremental'| I1
+    end
+
+    subgraph TRIGGERS ["5. Fault Injection & Reevaluation Triggers (backend/engine.py)"]
+        direction TB
+        TR1["Scheduled Failure Injection (rnd == failure_round)<br/>• Mode: articulation point / random (default: articulation)<br/>• Deactivates chosen node(s) from active graph<br/>• Invalidates connectivity cache & notifies 1-hop neighbors"]
+        TR2["Depletion Threshold Event (0 < E_v ≤ threshold)<br/>• Detects intermediate relay nodes crossing remaining battery threshold (default: 25%)<br/>• Preemptively triggers localized route refresh before node exhaustion"]
+        TR3["Node Battery Depletion Event (E_v ≤ 0)<br/>• Identifies exhausted nodes (newly_dead); adds to dead set<br/>• Removes node from active graph; severs incident links"]
+    end
+
+    subgraph RECOMPUTE ["6. Route Invalidation & Recomputation Policies (backend/engine.py)"]
+        direction TB
+        R_FULL["Full Recomputation (Baselines / Initialization)<br/>recompute_all() sweeps all non-gateway nodes<br/>• route_recomputations += |active nodes|<br/>• full_recomputations += 1"]
+        R_INCR["IEFT-IR Localized Incremental Recomputation<br/>Filters affected sources: to_update = {src | dead_or_risky ∈ path[src]}<br/>• Recomputes path only for affected sources via compute_path()<br/>• route_recomputations += |to_update|<br/>• local_updates += |to_update|<br/>• Unaffected paths remain cached in memory with 0 overhead"]
+    end
+
+    subgraph FORWARDING ["7. Packet Forwarding & Round Execution (backend/engine.py)"]
+        direction TB
+        FW1["Round Traffic Dispatching<br/>• traffic_per_round (default: 18) packets dispatched to random active sources<br/>• Hop-by-hop viability check: active link existence & positive residual energy at every hop"]
+        FW2["Energy Accounting & Control Overhead Tracking<br/>• Sender TX drain: tx_cost · (1 + d²), Receiver RX drain: rx_cost<br/>• Updates residual energy energies[u] & cumulative depletion[u]<br/>• Tracks modeled control overhead: 32 bytes/route adv, 16 bytes/failure alert, 0.5 factor control energy<br/>• Updates delivery count: packets_delivered, packets_sent"]
+        FW1 --> FW2
+    end
+
+    subgraph METRICS ["8. Performance Metric Collection (backend/engine.py)"]
+        direction TB
+        M1["Simulation Metrics Engine<br/>• Packet Delivery Ratio (PDR = packets_delivered / packets_sent)<br/>• Modeled Energy Consumed (data_energy_consumed + ctrl_energy_consumed)<br/>• Routing Recomputations (total route_recomputations vs. local_route_updates)<br/>• Measured Edge Connectivity κ & connectivity_target_met (via NetworkX)<br/>• Node Lifetime Milestones: first_node_dead, half_nodes_dead, last_node_dead rounds<br/>• Simulator Runtime: estimated_runtime_ms (wall-clock elapsed_ms)"]
+    end
+
+    subgraph API_LAYER ["9. Backend API Service (backend/main.py — FastAPI)"]
+        direction TB
+        API1["REST API Endpoints (FastAPI)<br/>• POST /api/simulate — Executes single simulation run; returns metrics, history, network snapshot<br/>• POST /api/compare — Runs multi-seed comparative benchmark across SP, EA, IEFT-IR (mean ± std)<br/>• POST /api/reroute — Executes targeted intermediate node failure & IEFT-IR route repair (before/after)<br/>• GET /api/health — System status check"]
+    end
+
+    subgraph FRONTEND ["10. Research Visualization Dashboard (frontend/src/main.jsx — React + Vite)"]
+        direction TB
+        UI1["Overview Tab<br/>• 6 Primary KPI Summary Cards (PDR, Active Nodes, Recomputations, κ, Energy, Nodes)<br/>• Live topology preview & multi-metric trajectory chart"]
+        UI2["Network Simulator Tab<br/>• Interactive SVG topology canvas (NetworkMap) with color-coded node states and route paths<br/>• Zoom tools, node-level battery gauges, and sub-metrics strip"]
+        UI3["Algorithm Comparison Tab<br/>• Comparative bar charts across Shortest-Path, Energy-Aware, and IEFT-IR<br/>• Statistical summary table (PDR, energy, dead rounds, recomputations, runtime)"]
+        UI4["Research Analytics & Rerouting Inspector<br/>• 4-grid Recharts visualization (Energy over rounds, PDR progression, Battery histogram, Recomputations)<br/>• Dedicated Before-vs-After failure injection & incremental repair verification panel"]
+    end
+
+    %% =========================================================================
+    %% INTER-COMPONENT CONNECTIONS & VERIFIED FEEDBACK LOOPS
+    %% =========================================================================
+
+    CONFIG -->|Initializes parameters & seeds| TOPOLOGY
+    TOPOLOGY -->|Node coordinates, active links, edge connectivity κ| COST_EVAL
+    COST_EVAL -->|Evaluated edge weights C(u,v)| ALGORITHMS
+
+    TRIGGERS -->|Topology change: remove node from active| TOPOLOGY
+    TRIGGERS -->|Invalidated / risky nodes list| RECOMPUTE
+
+    BASELINES -->|Each round invokes full recomputation| R_FULL
+    IEFTIR -->|Events invoke targeted update| R_INCR
+
+    R_FULL -->|Updated routing tables| FORWARDING
+    R_INCR -->|Updated path cache| FORWARDING
+
+    FORWARDING -->|Depletes node residual energies E_v| TOPOLOGY
+    FORWARDING -->|Energy levels cross threshold or reach zero| TRIGGERS
+    FORWARDING -->|Per-round packet & energy logs| METRICS
+
+    METRICS -->|Assembles JSON response payload| API_LAYER
+    API_LAYER -->|HTTP JSON response| FRONTEND
+    FRONTEND -.->|Optional user reconfiguration| CONFIG
+```

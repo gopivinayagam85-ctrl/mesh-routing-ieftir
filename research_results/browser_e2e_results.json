@@ -1,0 +1,187 @@
+{
+  "steps": [
+    {
+      "step": "Load page",
+      "title": "Mesh Routing Lab",
+      "passed": true
+    },
+    {
+      "step": "Verify UI elements",
+      "brand": "Mesh Routing Lab",
+      "passed": true
+    },
+    {
+      "step": "Initial topology state",
+      "topoChip": "AWAITING RUN",
+      "passed": true
+    },
+    {
+      "step": "Incremental simulation execution",
+      "svgCircles": 57,
+      "pdrMetric": "Packet Delivery Ratio38.6%556 delivered / 1440 offered",
+      "passed": true
+    },
+    {
+      "step": "Energy-aware simulation execution",
+      "algoChip": "Algorithm: energy",
+      "passed": true
+    },
+    {
+      "step": "Shortest path simulation execution",
+      "shortestChip": "Algorithm: shortest",
+      "passed": true
+    },
+    {
+      "step": "Fault injection & route recovery",
+      "failureMetric": "Route Recomputations1039Local updates: 1012",
+      "passed": true
+    },
+    {
+      "step": "Comparison suite multi-algorithm execution",
+      "summaryRows": 3,
+      "passed": true
+    },
+    {
+      "step": "Method & metrics rendering",
+      "methodHeading": "Methodology & Algorithmic Workflow",
+      "passed": true
+    },
+    {
+      "step": "Input validation error handling",
+      "errorBanner": "⚠ Validation error: Gateway node ID must be less than node count (0 to 27).✕",
+      "passed": true
+    },
+    {
+      "step": "Dismiss error banner",
+      "errorBannerAfter": 0,
+      "passed": true
+    },
+    {
+      "step": "Mobile viewport rendering (375x667)",
+      "passed": true
+    }
+  ],
+  "consoleMessages": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    }
+  ],
+  "pageErrors": [],
+  "networkRequests": [
+    {
+      "url": "http://localhost:5173/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/@vite/client",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/src/main.jsx?t=1791738533513",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/node_modules/vite/dist/client/env.mjs",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/node_modules/.vite/deps/react.js?v=8fa8595c",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=8fa8595c",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/src/styles.css?t=1791738533513",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/node_modules/.vite/deps/chunk-2YIMICFJ.js?v=8fa8595c",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/node_modules/.vite/deps/chunk-2OVYXPBS.js?v=8fa8595c",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/node_modules/.vite/deps/recharts.js?v=8fa8595c",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/api/health",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:5173/favicon.svg",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/api/simulate?algorithm=incremental",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/api/simulate?algorithm=energy",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/api/simulate?algorithm=shortest",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/api/simulate?algorithm=incremental",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8000/api/compare",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwhsk.woff2",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "success": true
+}

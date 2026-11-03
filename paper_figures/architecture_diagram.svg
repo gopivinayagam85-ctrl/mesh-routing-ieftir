@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1620" width="1200" height="1620">
+  <style>
+    .title { font-family: 'Times New Roman', Times, serif; font-size: 24px; font-weight: bold; fill: #0F172A; text-anchor: middle; }
+    .subtitle { font-family: 'Times New Roman', Times, serif; font-size: 13.5px; font-style: italic; fill: #475569; text-anchor: middle; }
+    .layer-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; font-weight: bold; fill: #1E293B; letter-spacing: 0.5px; }
+    .box-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; font-weight: bold; fill: #0F172A; }
+    .box-sub { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: bold; fill: #2563EB; }
+    .box-text { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; fill: #334155; line-height: 1.4; }
+    .box-code { font-family: 'Courier New', Courier, monospace; font-size: 10.5px; fill: #0F172A; }
+    .prominent-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13.5px; font-weight: bold; fill: #0369A1; }
+    .legend-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: bold; fill: #1E293B; }
+    .legend-text { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; fill: #475569; }
+    .arrow-text { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10.5px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284C7" />
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0D9488" />
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#E11D48" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="1620" fill="#FFFFFF" />
+
+  <!-- Title Block -->
+  <text x="600" y="42" class="title">Architecture of the IEFT-IR Routing Simulation Framework</text>
+  <text x="600" y="66" class="subtitle">System decomposition, component interactions, and execution pipeline verified against codebase implementation</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 1: CONFIGURATION & TOPOLOGY INITIALIZATION -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="90" width="1100" height="140" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="70" y="112" class="layer-title">LAYER 1: SIMULATION SETUP &amp; TOPOLOGY INITIALIZATION (backend/main.py, backend/engine.py, backend/simulation/)</text>
+
+  <!-- Box 1A: Simulation Configuration -->
+  <rect x="70" y="125" width="510" height="92" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="85" y="145" class="box-title">Simulation Scenario Configuration</text>
+  <text x="340" y="145" class="box-sub">SimRequest / Config Dataclass</text>
+  <text x="85" y="165" class="box-text">• Network: nodes N=28 [default], gateway=0, rounds R=80, seed=7 | k=2 (target, heuristic)</text>
+  <text x="85" y="182" class="box-text">• Energy: E_init=100.0 J, tx_cost=0.65 J, rx_cost=0.18 J, threshold=25.0%</text>
+  <text x="85" y="199" class="box-text">• Optional: use_weighted_route=False [default], weights w_e=w_d=w_r=1.0 | rigorous_k=False [default]</text>
+
+  <!-- Box 1B: Mesh Topology & Node State -->
+  <rect x="620" y="125" width="510" height="92" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="635" y="145" class="box-title">Mesh Network Topology &amp; Node State</text>
+  <text x="900" y="145" class="box-sub">build_network / Node models</text>
+  <text x="635" y="165" class="box-text">• Spatial Unit Square: Uniform placement G(n, r) with pos (x, y); nearest-component stitching</text>
+  <text x="635" y="182" class="box-text">• Edge Augmentation: Best-effort candidate links toward target k (actual connectivity measured)</text>
+  <text x="635" y="199" class="box-text">• State Containers: Node models (simulation/models.py), energies[n], cumulative depletion[n]</text>
+
+  <!-- Arrow Layer 1 to Layer 2 -->
+  <line x1="600" y1="230" x2="600" y2="263" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="610" y="251" class="arrow-text">Active topology graph active = G.copy() &amp; initial node states</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 2: MULTI-OBJECTIVE EDGE COST EVALUATION -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="265" width="1100" height="130" rx="6" fill="#F0FDFA" stroke="#99F6E4" stroke-width="1.2" />
+  <text x="70" y="287" class="layer-title" fill="#0F766E">LAYER 2: ENERGY STATE &amp; ROUTING-COST EVALUATION (backend/engine.py: route_weight)</text>
+
+  <rect x="70" y="298" width="1060" height="85" rx="4" fill="#FFFFFF" stroke="#5EEAD4" stroke-width="1" />
+  <text x="90" y="318" class="box-title">Edge Cost Function: route_weight(G, u, v, mode, energies, depletion, cfg)</text>
+  <text x="90" y="338" class="box-code">[Default: use_weighted_route=False]  C(u, v) = tx_cost · (1 + d²) + 2.4 / max(0.02, E_v / E_init) + 3.0 · (D_v / E_init)</text>
+  <text x="90" y="356" class="box-code">[Optional: use_weighted_route=True]   C(u, v) = tx_cost · (1 + d²) + w_e · (2.4 / e_v) + w_d · (3.0 · drain) + w_r · (1.0 - κ / k)</text>
+  <text x="90" y="374" class="box-text">Evaluates transmission cost T(u,v), residual energy ratio e_v, cumulative drain D_v, and measured connectivity κ = _get_cached_connectivity(G).</text>
+
+  <!-- Arrow Layer 2 to Layer 3 -->
+  <line x1="600" y1="395" x2="600" y2="428" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="610" y="416" class="arrow-text">Evaluated link costs C(u, v) dispatched to active routing algorithm</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 3: ROUTING ALGORITHM EXECUTION (Baselines vs Proposed IEFT-IR) -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="430" width="1100" height="240" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="70" y="452" class="layer-title">LAYER 3: ROUTING ALGORITHM EXECUTION &amp; RECOMPUTATION POLICIES (backend/engine.py, backend/simulation/routing.py)</text>
+
+  <!-- Algorithm Selection Dispatcher -->
+  <rect x="70" y="465" width="1060" height="28" rx="3" fill="#E2E8F0" stroke="#94A3B8" stroke-width="0.8" />
+  <text x="600" y="484" font-family="'Helvetica Neue', Arial, sans-serif" font-size="12px" font-weight="bold" fill="#1E293B" text-anchor="middle">
+    Routing Algorithm Dispatcher: engine_algo ∈ { 'shortest', 'energy', 'incremental' }
+  </text>
+
+  <!-- Column A: Shortest Path Baseline -->
+  <rect x="70" y="505" width="230" height="150" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="85" y="525" class="box-title">Shortest-Path (SP)</text>
+  <text x="85" y="542" class="box-sub">Hop-Minimal Baseline</text>
+  <text x="85" y="562" class="box-text">• Cost: C(u, v) = 1.0 + d</text>
+  <text x="85" y="580" class="box-text">• Dijkstra on geometric hops</text>
+  <text x="85" y="598" class="box-text">• Ignores residual energy</text>
+  <text x="85" y="616" class="box-text">• Global recalculation per round</text>
+  <text x="85" y="634" class="box-text">  (recompute_all on active nodes)</text>
+
+  <!-- Column B: Global Energy-Aware Baseline -->
+  <rect x="320" y="505" width="240" height="150" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="335" y="525" class="box-title">Global Energy-Aware (EA)</text>
+  <text x="335" y="542" class="box-sub">Full Recomputation Baseline</text>
+  <text x="335" y="562" class="box-text">• Cost: Full C(u, v) multi-metric</text>
+  <text x="335" y="580" class="box-text">• Energy-weighted shortest path</text>
+  <text x="335" y="598" class="box-text">• Global recalculation per round:</text>
+  <text x="335" y="616" class="box-text">  recompute_all() sweeps</text>
+  <text x="335" y="634" class="box-text">  every non-gateway node</text>
+
+  <!-- Column C: Proposed IEFT-IR Prominent Container -->
+  <rect x="580" y="505" width="550" height="150" rx="4" fill="#F0F9FF" stroke="#0284C7" stroke-width="2" />
+  <text x="595" y="526" class="prominent-title">PROPOSED: Incremental Energy-Aware Fault-Tolerant Routing (IEFT-IR)</text>
+  <text x="595" y="544" class="box-sub" fill="#0369A1">compute_path() with Localized Invalidation &amp; State Caching</text>
+
+  <rect x="595" y="552" width="250" height="92" rx="3" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="1" />
+  <text x="605" y="570" class="box-title" font-size="11.5px">IEFT-IR Multi-Objective Core</text>
+  <text x="605" y="588" class="box-text">• Energy &amp; depletion-penalized Dijkstra</text>
+  <text x="605" y="605" class="box-text">• Optional Rigorous k-Edge Check:</text>
+  <text x="605" y="622" class="box-text">  _path_uses_bridge() bridge avoidance</text>
+  <text x="605" y="638" class="box-text">  Iterative edge penalty (up to 5 alts)</text>
+
+  <rect x="860" y="552" width="255" height="92" rx="3" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="1" />
+  <text x="870" y="570" class="box-title" font-size="11.5px">Route Cache &amp; Incremental State</text>
+  <text x="870" y="588" class="box-text">• Persistent Cache: paths[src] table</text>
+  <text x="870" y="605" class="box-text">• Steady State: Zero recomputations</text>
+  <text x="870" y="622" class="box-text">• Local Updates: Recomputes only</text>
+  <text x="870" y="638" class="box-text">  sources traversing dead/depleted relays</text>
+
+  <!-- Connectors from Dispatcher -->
+  <line x1="185" y1="493" x2="185" y2="505" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arrow)" />
+  <line x1="440" y1="493" x2="440" y2="505" stroke="#94A3B8" stroke-width="1.2" marker-end="url(#arrow)" />
+  <line x1="855" y1="493" x2="855" y2="505" stroke="#0284C7" stroke-width="1.5" marker-end="url(#arrow-blue)" />
+
+  <!-- Arrow Layer 3 to Layer 4 -->
+  <line x1="600" y1="670" x2="600" y2="703" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="610" y="691" class="arrow-text">Active paths table paths[src] passed to per-round forwarding engine</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 4: SIMULATION ROUND EXECUTION & PACKET FORWARDING -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="705" width="1100" height="150" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="70" y="727" class="layer-title">LAYER 4: SIMULATION ROUND EXECUTION &amp; PACKET FORWARDING (backend/engine.py)</text>
+
+  <!-- Box 4A: Traffic Generation & Path Viability -->
+  <rect x="70" y="740" width="340" height="100" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="85" y="760" class="box-title">Traffic Generation &amp; Dispatching</text>
+  <text x="85" y="780" class="box-text">• traffic_per_round (default: 18) pkts sourced per round</text>
+  <text x="85" y="797" class="box-text">• Source selection from routable nodes</text>
+  <text x="85" y="814" class="box-text">• Hop-by-Hop Path Viability Check:</text>
+  <text x="85" y="831" class="box-text">  Active edge existence &amp; positive node battery</text>
+
+  <!-- Box 4B: Energy Consumption Model -->
+  <rect x="430" y="740" width="340" height="100" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="445" y="760" class="box-title">Modeled Energy Dissipation</text>
+  <text x="445" y="780" class="box-text">• Transmission Drain: TX = tx_cost · (1 + d²)</text>
+  <text x="445" y="797" class="box-text">• Reception Drain: RX = rx_cost</text>
+  <text x="445" y="814" class="box-text">• Battery Update: E_v = max(0, E_v - cost)</text>
+  <text x="445" y="831" class="box-text">• Cumulative Depletion Accounting: D_v += cost</text>
+
+  <!-- Box 4C: Control-Plane Accounting -->
+  <rect x="790" y="740" width="340" height="100" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="805" y="760" class="box-title">Control-Plane Overhead Accounting</text>
+  <text x="805" y="780" class="box-text">• Route Advertisements: 32 bytes / hop on path</text>
+  <text x="805" y="797" class="box-text">• Failure Alerts: 16-byte neighbor notifications</text>
+  <text x="805" y="814" class="box-text">• Scaled Control Energy: 0.5 · (TX + RX)</text>
+  <text x="805" y="831" class="box-text">• Cumulative control bytes &amp; messages tracked</text>
+
+  <!-- Arrow Layer 4 to Layer 5 -->
+  <line x1="600" y1="855" x2="600" y2="888" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="610" y="876" class="arrow-text">Node battery depletion &amp; round progression triggers</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 5: FAULT INJECTION & THRESHOLD-TRIGGERED REEVALUATION -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="890" width="1100" height="155" rx="6" fill="#FFF1F2" stroke="#FECDD3" stroke-width="1.2" />
+  <text x="70" y="912" class="layer-title" fill="#BE123C">LAYER 5: FAULT INJECTION, DEPLETION EVENTS &amp; FEEDBACK LOOPS (backend/engine.py)</text>
+
+  <!-- Box 5A: Scheduled Failure Injection -->
+  <rect x="70" y="925" width="340" height="105" rx="4" fill="#FFFFFF" stroke="#FDA4AF" stroke-width="1" />
+  <text x="85" y="945" class="box-title">1. Scheduled Fault Injection</text>
+  <text x="85" y="965" class="box-text">• Triggered at rnd == failure_round (default: Rnd 25)</text>
+  <text x="85" y="982" class="box-text">• Failure Mode: Articulation point or random</text>
+  <text x="85" y="999" class="box-text">• Deactivates target node from active topology</text>
+  <text x="85" y="1016" class="box-text">• Invalidates cached edge connectivity</text>
+
+  <!-- Box 5B: Depletion Threshold Event -->
+  <rect x="430" y="925" width="340" height="105" rx="4" fill="#FFFFFF" stroke="#FDA4AF" stroke-width="1" />
+  <text x="445" y="945" class="box-title">2. Threshold-Triggered Reevaluation</text>
+  <text x="445" y="965" class="box-text">• Condition: 0 &lt; E_v ≤ threshold (default: 25% battery)</text>
+  <text x="445" y="982" class="box-text">• Detects intermediate relays crossing threshold</text>
+  <text x="445" y="999" class="box-text">• Evaluates risky = {n | 0 &lt; E_n ≤ 25}</text>
+  <text x="445" y="1016" class="box-text">• Preemptively shifts routes before node exhaustion</text>
+
+  <!-- Box 5C: Node Battery Exhaustion -->
+  <rect x="790" y="925" width="340" height="105" rx="4" fill="#FFFFFF" stroke="#FDA4AF" stroke-width="1" />
+  <text x="805" y="945" class="box-title">3. Node Death &amp; Edge Severing</text>
+  <text x="805" y="965" class="box-text">• Condition: E_v ≤ 0 (complete depletion)</text>
+  <text x="805" y="982" class="box-text">• Node added to dead set, removed from active</text>
+  <text x="805" y="999" class="box-text">• Incident links severed &amp; broadcast alert</text>
+  <text x="805" y="1016" class="box-text">• Lifetime counters (First/50%/Last node dead)</text>
+
+  <!-- Feedback Loop Path (Layer 5 back to Layer 3) -->
+  <path d="M 50 970 L 25 970 L 25 580 L 65 580" fill="none" stroke="#E11D48" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arrow-red)" />
+  <text x="35" y="775" class="arrow-text" fill="#BE123C" transform="rotate(-90 35 775)">Feedback Loop: Invalidation trigger to IEFT-IR / Baselines</text>
+
+  <!-- Arrow Layer 5 to Layer 6 -->
+  <line x1="600" y1="1045" x2="600" y2="1078" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="610" y="1066" class="arrow-text">Per-round execution logs &amp; trajectory statistics</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 6: PERFORMANCE METRICS ENGINE & DATA AGGREGATION -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="1080" width="1100" height="120" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="70" y="1102" class="layer-title">LAYER 6: PERFORMANCE METRIC COLLECTION &amp; STATISTICAL AGGREGATION (backend/engine.py)</text>
+
+  <rect x="70" y="1115" width="250" height="72" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="85" y="1135" class="box-title">Reliability &amp; Delivery</text>
+  <text x="85" y="1155" class="box-text">• PDR: delivered / offered pkts</text>
+  <text x="85" y="1172" class="box-text">• Connectivity: NetworkX κ check</text>
+
+  <rect x="340" y="1115" width="250" height="72" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="355" y="1135" class="box-title">Routing Overhead</text>
+  <text x="355" y="1155" class="box-text">• route_recomputations count</text>
+  <text x="355" y="1172" class="box-text">• local_route_updates count</text>
+
+  <rect x="610" y="1115" width="250" height="72" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="625" y="1135" class="box-title">Energy &amp; Lifetime</text>
+  <text x="625" y="1155" class="box-text">• Total Energy (Data + Control J)</text>
+  <text x="625" y="1172" class="box-text">• First, 50%, and Last node dead</text>
+
+  <rect x="880" y="1115" width="250" height="72" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="895" y="1135" class="box-title">Computational Cost</text>
+  <text x="895" y="1155" class="box-text">• Wall-clock runtime (elapsed_ms)</text>
+  <text x="895" y="1172" class="box-text">• Multi-seed mean ± std stats</text>
+
+  <!-- Arrow Layer 6 to Layer 7 -->
+  <line x1="600" y1="1200" x2="600" y2="1233" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="610" y="1221" class="arrow-text">JSON metric payload assembled for REST API</text>
+
+  <!-- ===================================================================== -->
+  <!-- LAYER 7: BACKEND REST API & FRONTEND VISUALIZATION DASHBOARD -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="1235" width="1100" height="235" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.2" />
+  <text x="70" y="1257" class="layer-title">LAYER 7: FASTAPI BACKEND SERVICES &amp; REACT VISUALIZATION DASHBOARD (backend/main.py, frontend/)</text>
+
+  <!-- Box 7A: FastAPI REST API Endpoints -->
+  <rect x="70" y="1270" width="350" height="185" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="85" y="1292" class="box-title">FastAPI Backend API (main.py)</text>
+  <text x="85" y="1315" class="box-sub">POST /api/simulate</text>
+  <text x="85" y="1332" class="box-text">Executes single-algorithm trajectory across R rounds</text>
+  <text x="85" y="1355" class="box-sub">POST /api/compare</text>
+  <text x="85" y="1372" class="box-text">Executes multi-seed paired benchmark across SP, EA, IEFT-IR</text>
+  <text x="85" y="1395" class="box-sub">POST /api/reroute</text>
+  <text x="85" y="1412" class="box-text">Performs real intermediate failure &amp; IEFT-IR route repair</text>
+  <text x="85" y="1435" class="box-sub">GET /api/health</text>
+  <text x="85" y="1450" class="box-text">Health monitoring and service connectivity</text>
+
+  <!-- Horizontal Transfer Arrow -->
+  <line x1="420" y1="1362" x2="468" y2="1362" stroke="#0284C7" stroke-width="1.8" marker-end="url(#arrow-blue)" />
+  <text x="444" y="1352" class="arrow-text" text-anchor="middle" fill="#0284C7">JSON</text>
+
+  <!-- Box 7B: React Visualization Dashboard -->
+  <rect x="470" y="1270" width="660" height="185" rx="4" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1" />
+  <text x="485" y="1292" class="box-title">React Research Dashboard (frontend/src/main.jsx, styles.css)</text>
+
+  <rect x="485" y="1305" width="310" height="66" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+  <text x="495" y="1323" class="box-title" font-size="11px">Overview &amp; Simulator Views</text>
+  <text x="495" y="1340" class="box-text">• 6 Primary KPI Summary Cards</text>
+  <text x="495" y="1356" class="box-text">• Interactive SVG Network Canvas (NetworkMap)</text>
+
+  <rect x="810" y="1305" width="305" height="66" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+  <text x="820" y="1323" class="box-title" font-size="11px">Algorithm Comparison View</text>
+  <text x="820" y="1340" class="box-text">• Multi-algorithm performance bar charts</text>
+  <text x="820" y="1356" class="box-text">• Mean ± std statistical summary table</text>
+
+  <rect x="485" y="1380" width="310" height="66" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+  <text x="495" y="1398" class="box-title" font-size="11px">Research Analytics View</text>
+  <text x="495" y="1415" class="box-text">• 4-Grid Recharts metrics visualization</text>
+  <text x="495" y="1431" class="box-text">• Battery histogram, PDR &amp; recomputation curves</text>
+
+  <rect x="810" y="1380" width="305" height="66" rx="3" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1" />
+  <text x="820" y="1398" class="box-title" font-size="11px">Rerouting Analysis Inspector</text>
+  <text x="820" y="1415" class="box-text">• Side-by-side Before vs. After topology</text>
+  <text x="820" y="1431" class="box-text">• Real CPU repair latency &amp; route shift readout</text>
+
+  <!-- ===================================================================== -->
+  <!-- LEGEND -->
+  <!-- ===================================================================== -->
+  <rect x="50" y="1490" width="1100" height="95" rx="6" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1" />
+  <text x="70" y="1512" class="legend-title">DIAGRAM CONVENTIONS &amp; CODEBASE VERIFICATION STATUS</text>
+
+  <rect x="70" y="1525" width="16" height="12" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1" />
+  <text x="95" y="1535" class="legend-text">Shared Simulation Pipeline Component</text>
+
+  <rect x="330" y="1525" width="16" height="12" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.8" />
+  <text x="355" y="1535" class="legend-text">Proposed IEFT-IR Algorithm Component</text>
+
+  <rect x="620" y="1525" width="16" height="12" fill="#FFF1F2" stroke="#FDA4AF" stroke-width="1" />
+  <text x="645" y="1535" class="legend-text">Fault Injection &amp; Threshold Detection</text>
+
+  <line x1="880" y1="1531" x2="910" y2="1531" stroke="#475569" stroke-width="1.4" marker-end="url(#arrow)" />
+  <text x="920" y="1535" class="legend-text">Direct Pipeline Data Flow</text>
+
+  <line x1="70" y1="1558" x2="100" y2="1558" stroke="#E11D48" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow-red)" />
+  <text x="110" y="1562" class="legend-text">Dynamic Invalidation Feedback Loop</text>
+
+  <text x="450" y="1562" class="legend-text" font-style="italic">Every module, cost formula, algorithm policy, and metric has been audited and verified against backend/ and frontend/ source files.</text>
+</svg>
